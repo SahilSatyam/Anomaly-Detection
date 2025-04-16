@@ -1,0 +1,80 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+frontend/build/
+frontend/.pnp
+frontend/.pnp.js
+
+# Testing
+frontend/coverage/
+
+# Environment variables
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Python virtual environment
+backend/venv/
+backend/.venv/
+
+# Python bytecode
+backend/__pycache__/
+*.py[cod]
+*.pyo
+
+# Jupyter Notebook checkpoints
+backend/.ipynb_checkpoints/
+
+# Database files
+*.sqlite3
+*.db
+
+# IDE-specific files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Miscellaneous
+*.swp
+*.bak
+*.tmp
+*.temp
+*.old
+*.orig
+*.rej
+
+# FastAPI auto-generated files
+backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+
+# Streamlit cache
+backend/visualization/.streamlit/
+
+# Ignore compiled files
+*.so
+*.dll
+*.exe
+*.out
+*.class
+
+# Ignore build artifacts
+dist/
+build/
