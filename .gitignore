@@ -18,6 +18,7 @@ frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
 frontend/.env.production.local
+backend/.env
 
 # Logs
 *.log
@@ -78,3 +79,25 @@ backend/visualization/.streamlit/
 # Ignore build artifacts
 dist/
 build/
+
+# Docker
+.env
+docker-compose.override.yml
+
+# Model cache
+backend/models/*.joblib
+backend/models/*_keras/
+backend/models/*.json
+
+# Prometheus/Grafana data
+monitoring/data/
+prometheus_data/
+grafana_data/
+
+# Alembic
+backend/alembic/versions/__pycache__/
+
+# Coverage reports
+coverage.xml
+.coverage
+htmlcov/

@@ -1,124 +1,267 @@
 # Stock Anomaly Detection - Frontend
 
-A modern React application for visualizing stock data and detecting anomalies in stock price movements, specifically focused on the "Magnificent 7" tech stocks.
+Modern React application for visualizing stock data and anomalies with real-time updates and export capabilities.
 
-## Features
+## ✨ Features
 
-- Real-time stock price visualization using candlestick charts
-- Volume analysis with color-coded histogram
-- Anomaly detection visualization
-- Modern, responsive UI with Material-UI components
-- Dark theme optimized for financial data viewing
-- Interactive chart controls (zoom, pan, time range selection)
-- Stock selection for Magnificent 7 companies (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA)
+- **Interactive Charts**: Candlestick charts with volume overlay using Lightweight Charts
+- **Anomaly Visualization**: Markers on charts showing detected anomalies by severity
+- **Real-time Updates**: Auto-refresh with configurable polling interval
+- **Data Export**: Download data as CSV or generate PDF reports
+- **Dark Theme**: Modern UI optimized for financial data viewing
+- **Responsive Design**: Works on desktop and tablet devices
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js (v14.0.0 or higher)
-- npm (v6.0.0 or higher)
+- Node.js 18+ (20 recommended)
+- npm 8+
 
-## Installation
+## 🚀 Quick Start
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/stock_anomaly_detection.git
-cd stock_anomaly_detection/frontend
-```
+### Installation
 
-2. Install dependencies:
 ```bash
 npm install
 ```
 
-## Development
-
-To start the development server:
+### Development
 
 ```bash
 npm start
 ```
 
-The application will be available at `http://localhost:3000`
+Application runs at http://localhost:3000
 
-## Building for Production
-
-To create a production build:
+### Production Build
 
 ```bash
 npm run build
 ```
 
-The build artifacts will be stored in the `build/` directory.
+Build output in `build/` directory.
 
-## Project Structure
+## ⚙️ Configuration
+
+Create `.env.local` for local settings:
+
+```env
+REACT_APP_API_URL=http://localhost:8000
+REACT_APP_DEBUG=false
+REACT_APP_REFRESH_INTERVAL=60000
+```
+
+| Variable                     | Description                | Default                 |
+| ---------------------------- | -------------------------- | ----------------------- |
+| `REACT_APP_API_URL`          | Backend API URL            | `http://localhost:8000` |
+| `REACT_APP_DEBUG`            | Enable debug mode          | `false`                 |
+| `REACT_APP_REFRESH_INTERVAL` | Auto-refresh interval (ms) | `60000`                 |
+
+## 📁 Project Structure
 
 ```
 frontend/
+├── public/                 # Static assets
 ├── src/
-│   ├── components/         # Reusable React components
-│   │   ├── Charts.jsx     # Stock chart visualization
-│   │   ├── AnomalyList.jsx# Anomaly detection display
-│   │   └── StockSelector.jsx# Stock selection component
+│   ├── components/        # Reusable UI components
+│   │   ├── Charts.jsx            # Candlestick chart with anomaly markers
+│   │   ├── Anomalies.jsx         # Anomaly list table
+│   │   ├── HistoricalRecords.jsx # Stock price history
+│   │   ├── StockSelector.jsx     # Stock dropdown
+│   │   ├── LoadingSkeleton.jsx   # Shimmer loading states
+│   │   └── ExportToolbar.jsx     # CSV/PDF export
+│   │
 │   ├── pages/             # Page components
-│   │   └── Dashboard.jsx  # Main dashboard page
-│   ├── App.js            # Root component
-│   └── index.js          # Entry point
-├── public/               # Static assets
-└── package.json         # Project dependencies and scripts
+│   │   ├── Dashboard.jsx  # Main dashboard
+│   │   └── Settings.jsx   # Settings page
+│   │
+│   ├── hooks/             # Custom React hooks
+│   │   └── useDataFetching.js    # Data fetching with polling
+│   │
+│   ├── utils/             # Utility functions
+│   │   ├── dateValidation.js     # Date range validation
+│   │   └── exportData.js         # CSV/PDF export
+│   │
+│   ├── config/            # Configuration
+│   │   └── api.js         # API endpoints & fetch wrapper
+│   │
+│   ├── App.js             # Root component with routing
+│   └── index.js           # Entry point
+│
+├── nginx.conf             # Production Nginx config
+├── Dockerfile             # Container image
+└── package.json           # Dependencies
 ```
 
-## Key Dependencies
+## 🧩 Key Components
 
-- React (^18.0.0)
-- Material-UI (@mui/material)
-- Lightweight Charts (^5.0.5)
-- Other utilities and development tools
+### Charts
 
-## Features in Detail
+Interactive candlestick chart with:
 
-### Stock Chart Component
-- Candlestick chart for price visualization
-- Volume histogram with color-coded bars
-- Interactive crosshair and tooltips
-- Responsive design with automatic resizing
-- Time range selection and navigation
+- OHLC price data
+- Volume histogram
+- Anomaly markers (color-coded by severity)
+- Zoom/pan controls
+- Responsive sizing
 
-### Anomaly Detection
-- Visual indicators for detected anomalies
-- Detailed anomaly information display
-- Filtering and sorting capabilities
-- Real-time updates
+### Dashboard
 
-### Stock Selection
-- Focused on Magnificent 7 tech stocks
-- Easy-to-use dropdown interface
-- Real-time data updates
-- Persistent selection state
+Main view featuring:
 
-## Configuration
+- Stock selector dropdown
+- Date range picker with presets
+- Date validation (start ≤ end)
+- Auto-refresh toggle
+- Export toolbar
+- Collapsible historical data
 
-The application can be configured through environment variables:
+### Loading States
 
-```env
-REACT_APP_API_URL=http://localhost:8000  # Backend API URL
+Shimmer skeleton components:
+
+- `ChartSkeleton` - Chart placeholder
+- `TableSkeleton` - Table rows placeholder
+- `DashboardSkeleton` - Full page loading
+
+## 🔧 Custom Hooks
+
+### `useStockData`
+
+Fetches stock data with optional auto-refresh:
+
+```jsx
+const { stockData, anomalies, loading, error, lastUpdated, refetch } =
+  useStockData("AAPL", startDate, endDate, {
+    autoRefresh: true,
+    refreshInterval: 60000,
+  });
 ```
 
-## Browser Support
+### `useHealthCheck`
 
-The application is tested and supported on:
+Monitors API health:
+
+```jsx
+const { isHealthy, health } = useHealthCheck(30000);
+```
+
+### `useLocalStorage`
+
+Persists state to localStorage:
+
+```jsx
+const [preferences, setPreferences] = useLocalStorage("prefs", {});
+```
+
+## 📤 Export Features
+
+### CSV Export
+
+- Stock price data with all OHLCV fields
+- Anomalies with detection method and score
+
+### PDF Report
+
+- Print-friendly format
+- Summary statistics
+- Anomaly table
+
+```jsx
+import { exportStockDataCSV, generatePDFReport } from "./utils/exportData";
+
+// Export prices
+exportStockDataCSV(stockData, "AAPL");
+
+// Generate report
+generatePDFReport({
+  stockData,
+  anomalies,
+  symbol: "AAPL",
+  dateRange: { start: "2024-01-01", end: "2024-01-31" },
+});
+```
+
+## 🧪 Testing
+
+```bash
+# Run tests
+npm test
+
+# With coverage
+npm test -- --coverage
+
+# Watch mode
+npm test -- --watchAll
+```
+
+### Test Files
+
+- `*.test.js` - Unit tests
+- Uses Jest + React Testing Library
+
+## 🐳 Docker
+
+### Build Image
+
+```bash
+docker build -t anomaly-frontend .
+
+# With custom API URL
+docker build \
+  --build-arg REACT_APP_API_URL=https://api.example.com \
+  -t anomaly-frontend .
+```
+
+### Run Container
+
+```bash
+docker run -p 3000:80 anomaly-frontend
+```
+
+## 🎨 Theme
+
+Material UI dark theme with custom colors:
+
+```javascript
+{
+  palette: {
+    mode: 'dark',
+    primary: { main: '#90caf9' },
+    secondary: { main: '#f48fb1' },
+    background: {
+      default: '#121212',
+      paper: '#1e1e1e',
+    },
+  },
+}
+```
+
+## 📱 Browser Support
+
 - Chrome (latest)
 - Firefox (latest)
 - Safari (latest)
 - Edge (latest)
 
-## Contributing
+## 🔗 API Integration
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+API calls use centralized config from `config/api.js`:
 
-## License
+```javascript
+import { API_ENDPOINTS, apiFetch } from "./config/api";
 
-This project is licensed under the MIT License - see the LICENSE file for details
+// Fetch with error handling
+const data = await apiFetch(API_ENDPOINTS.stockData);
+```
+
+Available endpoints:
+
+- `API_ENDPOINTS.stocks` - Stock list
+- `API_ENDPOINTS.stockData` - Price history
+- `API_ENDPOINTS.anomalies` - Detected anomalies
+- `API_ENDPOINTS.detectAnomalies` - Trigger detection
+- `API_ENDPOINTS.health` - Health check
+
+## 📝 License
+
+MIT License - see [LICENSE](../LICENSE)
