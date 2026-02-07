@@ -24,6 +24,13 @@ import re
 from data_storage.database import DatabaseManager
 from data_storage.models import Stock, StockPrice, Anomaly
 
+# Configure logging FIRST (before any imports that might use logger)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Import anomaly detection modules
 try:
     from anomaly_detection import (
@@ -49,13 +56,6 @@ except ImportError as e:
     logger.warning(f"Alert system not available: {e}")
     ALERTS_AVAILABLE = False
     alert_manager = None
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 
 # ============== Enums ==============

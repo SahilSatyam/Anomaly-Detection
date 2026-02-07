@@ -8,11 +8,14 @@ FastAPI-based backend service for stock data collection, anomaly detection, and 
 - **Advanced Anomaly Detection**:
   - Statistical: Bollinger Bands, Z-Score, Volume Analysis
   - Machine Learning: Isolation Forest, LSTM, AutoEncoder
+  - Advanced DL: Transformer, VAE, Temporal Convolutional Network
   - Time-Series: ARIMA (auto-tuned), Prophet
-- **Model Persistence**: Cached ML models to avoid retraining
+- **Model Persistence**: Cached ML models with automatic expiration
+- **MLOps Pipeline**: Automated model retraining and versioning
 - **Alert System**: Email, Slack, Discord, custom webhooks
 - **Prometheus Metrics**: HTTP, database, and detection metrics
 - **Structured Logging**: JSON format for log aggregation
+- **Comprehensive Testing**: 80+ unit tests with coverage reporting
 
 ## 📋 Prerequisites
 
@@ -83,6 +86,7 @@ backend/
 │   ├── __init__.py          # Module exports
 │   ├── statistical_methods.py # Bollinger, Z-Score
 │   ├── ml_models.py         # Isolation Forest, LSTM, AutoEncoder
+│   ├── advanced_models.py   # Transformer, VAE, TCN (GPU)
 │   ├── forecasting.py       # ARIMA, Prophet
 │   ├── hybrid_detection.py  # Consensus detection
 │   └── model_persistence.py # Model caching
@@ -93,12 +97,23 @@ backend/
 │   ├── email_alerts.py      # SMTP integration
 │   └── webhook_alerts.py    # Slack/Discord/custom
 │
+├── tests/                    # Unit & integration tests
+│   ├── conftest.py          # Pytest fixtures & sample data
+│   ├── test_statistical_methods.py
+│   ├── test_ml_models.py
+│   ├── test_model_persistence.py
+│   └── test_api_endpoints.py
+│
+├── scripts/                  # Automation scripts
+│   └── scheduled_retrain.py # Model retraining automation
+│
 ├── alembic/                  # Database migrations
 │   ├── env.py
 │   └── versions/
 │
 ├── logging_config.py         # Structured logging
 ├── metrics.py                # Prometheus metrics
+├── pytest.ini                # Test configuration
 └── Dockerfile               # Container image
 ```
 
@@ -260,16 +275,67 @@ Set `LOG_FORMAT=json` for structured logs:
 
 ## 🧪 Testing
 
+### Test Structure
+
+| Test File                     | Coverage                             |
+| ----------------------------- | ------------------------------------ |
+| `test_statistical_methods.py` | Bollinger, Z-Score, Volume detection |
+| `test_ml_models.py`           | Isolation Forest, LSTM, AutoEncoder  |
+| `test_model_persistence.py`   | Caching, versioning, cleanup         |
+| `test_api_endpoints.py`       | REST API, validation, errors         |
+
+### Running Tests
+
 ```bash
-# Run all tests
-pytest -v
+# Run all tests with coverage
+pytest -v --cov=. --cov-report=html
 
-# With coverage
-pytest --cov=. --cov-report=html
+# Run specific test file
+pytest tests/test_ml_models.py -v
 
-# Specific test file
-pytest test_apis.py -v
+# Skip slow tests (LSTM/Transformer training)
+pytest -m "not slow" -v
+
+# Run with parallel execution
+pytest -n auto -v
 ```
+
+### Coverage Report
+
+```bash
+# Generate HTML report
+pytest --cov=anomaly_detection --cov-report=html
+
+# View report
+start htmlcov/index.html  # Windows
+open htmlcov/index.html   # macOS
+```
+
+---
+
+## 🔄 Model Retraining
+
+### Automated Retraining
+
+```bash
+# Retrain all models
+python scripts/scheduled_retrain.py --all
+
+# Retrain specific model
+python scripts/scheduled_retrain.py --symbol AAPL --model lstm
+
+# Cleanup expired models
+python scripts/scheduled_retrain.py --cleanup --max-age 24
+```
+
+### Scheduled Retraining (Cron)
+
+```bash
+# Daily at 2 AM
+0 2 * * * cd /path/to/backend && python scripts/scheduled_retrain.py --all
+```
+
+See [MODEL_RETRAINING_PIPELINE.md](../docs/MODEL_RETRAINING_PIPELINE.md) for full documentation.
 
 ## 🐳 Docker
 

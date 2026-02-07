@@ -410,3 +410,67 @@ docker-compose logs database
 3. **Detect Anomalies**: Run detection algorithms on collected data
 4. **Configure Alerts**: Set up email/Slack/Discord notifications
 5. **Monitor**: Use Prometheus/Grafana for system metrics
+
+---
+
+## 🧪 Testing (Optional)
+
+Run the test suite to verify everything is working:
+
+```bash
+# Navigate to backend
+cd backend
+
+# Run all tests
+pytest -v
+
+# Run with coverage report
+pytest -v --cov=anomaly_detection --cov-report=html
+
+# Skip slow ML model tests
+pytest -m "not slow" -v
+
+# View coverage report (Windows)
+start htmlcov/index.html
+```
+
+---
+
+## 🔄 Model Retraining (Optional)
+
+Retrain ML models with fresh data:
+
+```bash
+cd backend
+
+# Retrain all models for all symbols
+python scripts/scheduled_retrain.py --all
+
+# Retrain specific model
+python scripts/scheduled_retrain.py --symbol AAPL --model isolation_forest
+
+# Cleanup expired models (older than 24 hours)
+python scripts/scheduled_retrain.py --cleanup --max-age 24
+```
+
+---
+
+## 📓 Jupyter Notebooks
+
+The project includes notebooks for model evaluation:
+
+| Notebook         | Description                            | Location                                      |
+| ---------------- | -------------------------------------- | --------------------------------------------- |
+| GPU Training     | Train advanced models on Google Colab  | `notebooks/GPU_Training_Colab.ipynb`          |
+| Model Benchmarks | Evaluate and compare model performance | `notebooks/Model_Evaluation_Benchmarks.ipynb` |
+
+---
+
+## 📚 Additional Documentation
+
+| Document                                                             | Description                        |
+| -------------------------------------------------------------------- | ---------------------------------- |
+| [README.md](../README.md)                                            | Project overview and features      |
+| [DEVOPS.md](../DEVOPS.md)                                            | Docker, CI/CD, monitoring guide    |
+| [MODEL_RETRAINING_PIPELINE.md](../docs/MODEL_RETRAINING_PIPELINE.md) | MLOps and retraining documentation |
+| [Backend README](../backend/README.md)                               | API endpoints and backend setup    |

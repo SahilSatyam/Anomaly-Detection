@@ -342,11 +342,31 @@ docker-compose build --no-cache backend
 ├── backend/
 │   ├── Dockerfile             # Backend Docker image
 │   ├── alembic/               # Database migrations
+│   ├── anomaly_detection/     # ML/statistical detection
+│   │   ├── statistical_methods.py
+│   │   ├── ml_models.py       # LSTM, Isolation Forest, AutoEncoder
+│   │   ├── advanced_models.py # Transformer, VAE, TCN
+│   │   ├── forecasting.py     # ARIMA, Prophet
+│   │   └── model_persistence.py
+│   ├── tests/                 # Unit & integration tests
+│   │   ├── conftest.py
+│   │   ├── test_statistical_methods.py
+│   │   ├── test_ml_models.py
+│   │   ├── test_model_persistence.py
+│   │   └── test_api_endpoints.py
+│   ├── scripts/               # Automation scripts
+│   │   └── scheduled_retrain.py
 │   ├── logging_config.py      # Structured logging
-│   └── metrics.py             # Prometheus metrics
+│   ├── metrics.py             # Prometheus metrics
+│   └── pytest.ini             # Test configuration
 ├── frontend/
 │   ├── Dockerfile             # Frontend Docker image
 │   └── nginx.conf             # Nginx configuration
+├── notebooks/                 # Jupyter notebooks
+│   ├── GPU_Training_Colab.ipynb
+│   └── Model_Evaluation_Benchmarks.ipynb
+├── docs/                      # Documentation
+│   └── MODEL_RETRAINING_PIPELINE.md
 ├── database/
 │   └── init.sql               # Database initialization
 ├── monitoring/
@@ -355,3 +375,52 @@ docker-compose build --no-cache backend
 ├── Makefile                   # Development commands
 └── .env.example               # Environment template
 ```
+
+---
+
+## 🧪 Testing
+
+### Running Tests in Docker
+
+```bash
+# Run backend tests
+docker-compose exec backend pytest -v --cov=anomaly_detection
+
+# Run with HTML coverage report
+docker-compose exec backend pytest --cov=. --cov-report=html
+```
+
+### Running Tests Locally
+
+```bash
+cd backend
+pytest -v --cov=anomaly_detection --cov-report=html
+
+# Skip slow tests (ML model training)
+pytest -m "not slow" -v
+```
+
+---
+
+## 🔄 Model Retraining
+
+### Manual Retraining
+
+```bash
+# In Docker
+docker-compose exec backend python scripts/scheduled_retrain.py --all
+
+# Locally
+cd backend && python scripts/scheduled_retrain.py --all
+```
+
+### Scheduled Retraining
+
+Add to crontab for automated retraining:
+
+```bash
+# Daily at 2 AM
+0 2 * * * cd /path/to/backend && python scripts/scheduled_retrain.py --all
+```
+
+See [MODEL_RETRAINING_PIPELINE.md](docs/MODEL_RETRAINING_PIPELINE.md) for full documentation.

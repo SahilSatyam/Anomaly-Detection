@@ -32,7 +32,6 @@ yarn-error.log*
 # Docker
 Dockerfile
 docker-compose*.yml
-nginx.conf
 
 # Documentation
 *.md

@@ -17,6 +17,7 @@ A full-stack application for real-time stock market monitoring, anomaly detectio
 
 - **Statistical Methods**: Bollinger Bands, Z-Score, Volume Analysis
 - **Machine Learning**: Isolation Forest, LSTM Neural Networks, AutoEncoder
+- **Advanced Deep Learning**: Transformer AutoEncoder, Variational AutoEncoder (VAE), Temporal Convolutional Network (TCN)
 - **Time-Series Forecasting**: ARIMA (auto-tuned), Facebook Prophet
 - **Hybrid Detection**: Consensus-based multi-method analysis
 
@@ -34,12 +35,13 @@ A full-stack application for real-time stock market monitoring, anomaly detectio
 - Custom webhook support
 - Configurable severity thresholds
 
-### ⚡ Performance
+### ⚡ Performance & MLOps
 
-- Model caching to avoid retraining
+- Model caching with automatic expiration
+- Automated model retraining pipeline
 - Database query optimization with indexes
 - Pagination for large datasets
-- Background data collection
+- Prometheus metrics for model monitoring
 
 ---
 
@@ -121,11 +123,21 @@ Anomaly-Detection/
 │   ├── data_storage/          # Database models & operations
 │   ├── anomaly_detection/     # Detection algorithms
 │   │   ├── statistical_methods.py
-│   │   ├── ml_models.py       # LSTM, Isolation Forest
+│   │   ├── ml_models.py       # LSTM, Isolation Forest, AutoEncoder
+│   │   ├── advanced_models.py # Transformer, VAE, TCN
 │   │   ├── forecasting.py     # ARIMA, Prophet
+│   │   ├── hybrid_detection.py
 │   │   └── model_persistence.py
 │   ├── alert_system/          # Email & webhook alerts
 │   ├── alembic/               # Database migrations
+│   ├── tests/                 # Unit & integration tests
+│   │   ├── conftest.py        # Pytest fixtures
+│   │   ├── test_statistical_methods.py
+│   │   ├── test_ml_models.py
+│   │   ├── test_model_persistence.py
+│   │   └── test_api_endpoints.py
+│   ├── scripts/               # Automation scripts
+│   │   └── scheduled_retrain.py
 │   └── Dockerfile
 │
 ├── frontend/                   # React Frontend
@@ -137,6 +149,13 @@ Anomaly-Detection/
 │   │   └── config/            # API configuration
 │   ├── nginx.conf             # Production config
 │   └── Dockerfile
+│
+├── notebooks/                  # Jupyter notebooks
+│   ├── GPU_Training_Colab.ipynb
+│   └── Model_Evaluation_Benchmarks.ipynb
+│
+├── docs/                       # Documentation
+│   └── MODEL_RETRAINING_PIPELINE.md
 │
 ├── monitoring/                 # Prometheus configs
 ├── database/                   # Init scripts
@@ -206,15 +225,46 @@ See `.env.example` for all available options.
 
 ## 🧪 Testing
 
+### Test Suite Overview
+
+| Test Category       | Description                          | Location                            |
+| ------------------- | ------------------------------------ | ----------------------------------- |
+| Statistical Methods | Bollinger, Z-Score, Volume detection | `tests/test_statistical_methods.py` |
+| ML Models           | Isolation Forest, LSTM, AutoEncoder  | `tests/test_ml_models.py`           |
+| Model Persistence   | Caching, versioning, cleanup         | `tests/test_model_persistence.py`   |
+| API Endpoints       | REST API, validation, error handling | `tests/test_api_endpoints.py`       |
+
+### Running Tests
+
 ```bash
-# Run all tests
+# Run all tests with coverage
 make test
 
-# Backend only
-cd backend && pytest -v --cov=.
+# Backend tests with verbose output
+cd backend && pytest -v --cov=. --cov-report=html
 
-# Frontend only
+# Run specific test file
+pytest tests/test_ml_models.py -v
+
+# Skip slow tests (LSTM training)
+pytest -m "not slow" -v
+
+# Run only API tests
+pytest tests/test_api_endpoints.py -v
+
+# Frontend tests
 cd frontend && npm test -- --coverage
+```
+
+### Coverage Report
+
+```bash
+# Generate HTML coverage report
+cd backend && pytest --cov=anomaly_detection --cov-report=html
+
+# View report
+open htmlcov/index.html  # macOS
+start htmlcov/index.html  # Windows
 ```
 
 ---
@@ -292,6 +342,33 @@ make migrate     # Run database migrations
 2. Implement `detect()` method returning `List[AnomalyResult]`
 3. Register in `__init__.py`
 4. Add to `/api/detect-anomalies` endpoint
+
+---
+
+## ☁️ Cloud Deployment
+
+### Google Cloud Platform (Recommended for low traffic)
+
+Deploy to **Cloud Run** for pay-per-use pricing (scales to zero when idle):
+
+```powershell
+# Quick deploy (Windows)
+cd deploy/gcp
+.\deploy.ps1 -ProjectId "your-project-id"
+
+# Or with external database (free)
+.\deploy.ps1 -ProjectId "your-project" -ExternalDbUrl "postgresql://..."
+```
+
+**Estimated Cost**: ~$0-9/month for low traffic
+
+📖 See full guide: [`deploy/gcp/README.md`](deploy/gcp/README.md)
+
+### Other Platforms
+
+- **Railway/Render**: One-click deploy with `docker-compose.yml`
+- **AWS ECS**: Enterprise scale with `cloudbuild.yaml` patterns
+- **DigitalOcean**: App Platform with managed PostgreSQL
 
 ---
 

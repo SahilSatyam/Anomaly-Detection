@@ -23,6 +23,28 @@ except ImportError:
     ProphetForecaster = None
     TrendAnalyzer = None
 
+# Advanced GPU models (optional - requires full TensorFlow)
+try:
+    from .advanced_models import (
+        TransformerAnomalyDetector,
+        VariationalAutoEncoder,
+        TemporalConvNet,
+        AttentionBiLSTM,
+        AdvancedHybridDetector,
+        configure_gpu,
+        get_device_info
+    )
+    ADVANCED_MODELS_AVAILABLE = True
+except ImportError:
+    ADVANCED_MODELS_AVAILABLE = False
+    TransformerAnomalyDetector = None
+    VariationalAutoEncoder = None
+    TemporalConvNet = None
+    AttentionBiLSTM = None
+    AdvancedHybridDetector = None
+    configure_gpu = None
+    get_device_info = None
+
 __all__ = [
     # Core
     'AnomalyResult',
@@ -40,5 +62,15 @@ __all__ = [
     'ARIMAForecaster',
     'ProphetForecaster',
     'TrendAnalyzer',
-    'FORECASTING_AVAILABLE'
+    'FORECASTING_AVAILABLE',
+    
+    # Advanced GPU Models (optional)
+    'TransformerAnomalyDetector',
+    'VariationalAutoEncoder',
+    'TemporalConvNet',
+    'AttentionBiLSTM',
+    'AdvancedHybridDetector',
+    'configure_gpu',
+    'get_device_info',
+    'ADVANCED_MODELS_AVAILABLE'
 ]

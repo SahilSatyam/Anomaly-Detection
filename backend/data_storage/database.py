@@ -1,7 +1,7 @@
 import os
 import json
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.dialects.postgresql import insert
@@ -659,7 +659,7 @@ class DatabaseManager:
         session = self.Session()
         try:
             # Test connection with simple query
-            session.execute("SELECT 1")
+            session.execute(text("SELECT 1"))
             
             # Get table statistics
             stock_count = session.query(Stock).count()
