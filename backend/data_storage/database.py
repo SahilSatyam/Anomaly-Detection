@@ -601,9 +601,14 @@ class DatabaseManager:
         """
         session = self.Session()
         try:
+            # Fetch all existing settings that match the provided keys at once
+            keys = list(settings.keys())
+            existing_settings = session.query(AppSettings).filter(AppSettings.key.in_(keys)).all()
+            existing_map = {s.key: s for s in existing_settings}
+
             for key, value in settings.items():
-                setting = session.query(AppSettings).filter_by(key=key).first()
-                if setting:
+                if key in existing_map:
+                    setting = existing_map[key]
                     setting.value = str(value)
                 else:
                     # Determine type
