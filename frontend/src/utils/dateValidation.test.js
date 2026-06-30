@@ -7,7 +7,7 @@ import {
   formatDate, 
   parseDate,
   getDatePresets 
-} from '../dateValidation';
+} from './dateValidation';
 
 describe('validateDateRange', () => {
   test('returns valid for correct date range', () => {
