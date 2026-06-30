@@ -156,58 +156,79 @@ class DatabaseManager:
 
     def store_stock_data(self, symbol: str, df: pd.DataFrame, upsert: bool = True) -> Dict[str, int]:
         """
-        Store stock price data in database with deduplication
-        
+        Store stock price data in database with deduplication using bulk operations.
+
         Args:
             symbol (str): Stock symbol
             df (pd.DataFrame): DataFrame containing price data
             upsert (bool): If True, update existing records; if False, skip duplicates
-            
+
         Returns:
             Dict[str, int]: Statistics about the operation (inserted, updated, skipped)
         """
         session = self.Session()
         stats = {'inserted': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
-        
+
+        if df.empty:
+            return stats
+
         try:
             stock = self.get_or_create_stock(symbol)
             
+            # 1. Fetch existing records in one query
+            dates = [d.to_pydatetime() for d in df['date']]
+            existing_prices = session.query(StockPrice).filter(
+                StockPrice.stock_id == stock.id,
+                StockPrice.date.in_(dates)
+            ).all()
+
+            existing_map = {p.date: p for p in existing_prices}
+
+            to_insert = []
+            to_update = []
+
+            # 2. Prepare lists for bulk insert/update
             for _, row in df.iterrows():
                 try:
-                    # Check for existing record
-                    existing = session.query(StockPrice).filter_by(
-                        stock_id=stock.id, date=row['date']
-                    ).first()
+                    row_date = row['date'].to_pydatetime()
                     
-                    if existing:
+                    if row_date in existing_map:
                         if upsert:
-                            # Update existing record
-                            existing.open = row['open']
-                            existing.high = row['high']
-                            existing.low = row['low']
-                            existing.close = row['close']
-                            existing.volume = row['volume']
-                            stats['updated'] += 1
+                            existing_record = existing_map[row_date]
+                            update_data = {
+                                'id': existing_record.id,
+                                'open': row['open'],
+                                'high': row['high'],
+                                'low': row['low'],
+                                'close': row['close'],
+                                'volume': row['volume']
+                            }
+                            to_update.append(update_data)
                         else:
                             stats['skipped'] += 1
                     else:
-                        # Insert new record
-                        price = StockPrice(
-                            stock_id=stock.id,
-                            date=row['date'],
-                            open=row['open'],
-                            high=row['high'],
-                            low=row['low'],
-                            close=row['close'],
-                            volume=row['volume']
-                        )
-                        session.add(price)
-                        stats['inserted'] += 1
-                        
+                        insert_data = {
+                            'stock_id': stock.id,
+                            'date': row_date,
+                            'open': row['open'],
+                            'high': row['high'],
+                            'low': row['low'],
+                            'close': row['close'],
+                            'volume': row['volume']
+                        }
+                        to_insert.append(insert_data)
                 except Exception as e:
-                    logger.warning(f"Error processing row for {symbol}: {str(e)}")
+                    logger.warning(f"Error processing row for {symbol} on date {row.get('date', 'N/A')}: {str(e)}")
                     stats['errors'] += 1
-                    continue
+
+            # 3. Execute bulk operations
+            if to_insert:
+                session.bulk_insert_mappings(StockPrice, to_insert)
+                stats['inserted'] = len(to_insert)
+
+            if to_update:
+                session.bulk_update_mappings(StockPrice, to_update)
+                stats['updated'] = len(to_update)
             
             session.commit()
             logger.info(f"Stock data for {symbol}: inserted={stats['inserted']}, "
@@ -216,7 +237,7 @@ class DatabaseManager:
             
         except SQLAlchemyError as e:
             session.rollback()
-            logger.error(f"Error storing stock data: {str(e)}")
+            logger.error(f"Error storing stock data for {symbol}: {str(e)}")
             raise
         finally:
             session.close()
