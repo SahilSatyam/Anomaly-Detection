@@ -51,7 +51,7 @@ class EmailAlertSystem:
         msg['Subject'] = f"Stock Anomaly Alert - {symbol}"
         
         # Create email body
-        body = f"""
+        body_parts = [f"""
         <html>
         <body>
             <h2>Stock Anomaly Alert for {symbol}</h2>
@@ -63,10 +63,10 @@ class EmailAlertSystem:
                     <th>Score</th>
                     <th>Details</th>
                 </tr>
-        """
+        """]
         
         for anomaly in anomalies:
-            body += f"""
+            body_parts.append(f"""
                 <tr>
                     <td>{anomaly.date}</td>
                     <td>{anomaly.method}</td>
@@ -77,15 +77,16 @@ class EmailAlertSystem:
                         Threshold: {anomaly.threshold:.2f}
                     </td>
                 </tr>
-            """
+            """)
             
-        body += """
+        body_parts.append("""
             </table>
             <p>Please review these anomalies and take appropriate action.</p>
         </body>
         </html>
-        """
+        """)
         
+        body = "".join(body_parts)
         msg.attach(MIMEText(body, 'html'))
         return msg
         
@@ -139,15 +140,15 @@ class EmailAlertSystem:
             msg['Subject'] = f"Daily Stock Anomaly Summary - {datetime.now().strftime('%Y-%m-%d')}"
             
             # Create email body
-            body = f"""
+            body_parts = [f"""
             <html>
             <body>
                 <h2>Daily Stock Anomaly Summary</h2>
                 <p>Date: {datetime.now().strftime('%Y-%m-%d')}</p>
-            """
+            """]
             
             for symbol, anomalies in daily_anomalies.items():
-                body += f"""
+                body_parts.append(f"""
                     <h3>{symbol}</h3>
                     <table border="1" cellpadding="5">
                         <tr>
@@ -156,10 +157,10 @@ class EmailAlertSystem:
                             <th>Score</th>
                             <th>Details</th>
                         </tr>
-                """
+                """)
                 
                 for anomaly in anomalies:
-                    body += f"""
+                    body_parts.append(f"""
                         <tr>
                             <td>{anomaly.date}</td>
                             <td>{anomaly.method}</td>
@@ -170,16 +171,17 @@ class EmailAlertSystem:
                                 Threshold: {anomaly.threshold:.2f}
                             </td>
                         </tr>
-                    """
+                    """)
                     
-                body += "</table>"
+                body_parts.append("</table>")
                 
-            body += """
+            body_parts.append("""
                 <p>Please review these anomalies and take appropriate action.</p>
             </body>
             </html>
-            """
+            """)
             
+            body = "".join(body_parts)
             msg.attach(MIMEText(body, 'html'))
             
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
