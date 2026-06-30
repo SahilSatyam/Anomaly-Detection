@@ -142,7 +142,12 @@ def setup_logging(
         formatter = JSONFormatter()
     else:
         # Development format with colors
-        fmt = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+        fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+        if os.getenv('ENV') == 'development':
+            # Add process/thread info for debugging
+            fmt = '%(asctime)s - %(name)s - [%(process)d:%(thread)d] - %(levelname)s - %(message)s'
+
         if sys.stdout.isatty():
             formatter = ColoredFormatter(fmt, datefmt='%Y-%m-%d %H:%M:%S')
         else:
