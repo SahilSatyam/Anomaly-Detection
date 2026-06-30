@@ -12,6 +12,7 @@ Features:
 """
 
 from fastapi import FastAPI, HTTPException, Query, Path, Body, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
@@ -678,7 +679,7 @@ async def get_stocks():
             detail="An error occurred while fetching stocks"
         )
     finally:
-        session.close()
+        await run_in_threadpool(session.close)
 
 
 # ============== Stock Data Endpoints ==============
@@ -807,7 +808,7 @@ async def get_stock_data(
             detail=f"An error occurred while fetching data for {symbol}"
         )
     finally:
-        session.close()
+        await run_in_threadpool(session.close)
 
 
 # ============== Anomaly Endpoints ==============
@@ -938,7 +939,7 @@ async def get_anomalies(
             detail=f"An error occurred while fetching anomalies for {symbol}"
         )
     finally:
-        session.close()
+        await run_in_threadpool(session.close)
 
 
 @app.get(
@@ -1028,7 +1029,7 @@ async def create_anomaly(
             detail="An error occurred while creating the anomaly"
         )
     finally:
-        session.close()
+        await run_in_threadpool(session.close)
 
 
 @app.put(
@@ -1246,7 +1247,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
     session = get_database_session()
     try:
         # Get stock
-        stock = session.query(Stock).filter(Stock.symbol == symbol).first()
+        stock = await run_in_threadpool(lambda: session.query(Stock).filter(Stock.symbol == symbol).first())
         if not stock:
             raise StockNotFoundError(f"Stock '{symbol}' not found in database")
         
@@ -1261,7 +1262,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
             StockPrice.date <= end_date
         ).order_by(StockPrice.date)
         
-        prices = query.all()
+        prices = await run_in_threadpool(query.all)
         
         if len(prices) < 30:
             raise HTTPException(
@@ -1297,9 +1298,9 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
                     num_std=request.threshold
                 )
                 
-                bollinger_anomalies = stat_detector.detect_bollinger_anomalies(data)
-                zscore_anomalies = stat_detector.detect_zscore_anomalies(data)
-                volume_anomalies = stat_detector.detect_volume_anomalies(data)
+                bollinger_anomalies = await run_in_threadpool(stat_detector.detect_bollinger_anomalies, data)
+                zscore_anomalies = await run_in_threadpool(stat_detector.detect_zscore_anomalies, data)
+                volume_anomalies = await run_in_threadpool(stat_detector.detect_volume_anomalies, data)
                 
                 stat_anomalies = bollinger_anomalies + zscore_anomalies + volume_anomalies
                 
@@ -1325,7 +1326,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
         if run_all or 'isolation_forest' in methods or 'ml' in methods:
             try:
                 ml_detector = MLAnomalyDetector(contamination=0.1)
-                if_anomalies = ml_detector.detect_isolation_forest_anomalies(data, symbol)
+                if_anomalies = await run_in_threadpool(ml_detector.detect_isolation_forest_anomalies, data, symbol)
                 
                 results_by_method['isolation_forest'] = {
                     'method': 'isolation_forest',
@@ -1352,7 +1353,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
                     sequence_length=10,
                     threshold=request.threshold
                 )
-                lstm_anomalies = lstm_detector.detect_lstm_anomalies(data, symbol)
+                lstm_anomalies = await run_in_threadpool(lstm_detector.detect_lstm_anomalies, data, symbol)
                 
                 results_by_method['lstm'] = {
                     'method': 'lstm',
@@ -1380,7 +1381,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
                     use_prophet=True,
                     threshold_std=request.threshold
                 )
-                forecast_results = trend_analyzer.analyze(data)
+                forecast_results = await run_in_threadpool(trend_analyzer.analyze, data)
                 
                 for method_name, method_anomalies in forecast_results.items():
                     results_by_method[method_name] = {
@@ -1408,7 +1409,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
                     window_size=20,
                     num_std=request.threshold
                 )
-                consensus_anomalies = hybrid_detector.get_consensus_anomalies(data, min_methods=2)
+                consensus_anomalies = await run_in_threadpool(hybrid_detector.get_consensus_anomalies, data, min_methods=2)
                 
                 results_by_method['hybrid_consensus'] = {
                     'method': 'hybrid_consensus',
@@ -1441,7 +1442,8 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
                 
                 try:
                     anomaly_type = 'hybrid' if 'hybrid' in anomaly.method else 'price'
-                    db.store_anomaly(
+                    await run_in_threadpool(
+                        db.store_anomaly,
                         stock_id=stock.id,
                         date=anomaly.date,
                         anomaly_type=anomaly_type,
@@ -1457,7 +1459,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
         alerts_sent = False
         if request.send_alerts and all_anomalies and ALERTS_AVAILABLE and alert_manager:
             try:
-                alert_results = alert_manager.send_alert(symbol, all_anomalies)
+                alert_results = await run_in_threadpool(alert_manager.send_alert, symbol, all_anomalies)
                 alerts_sent = any(r.success for r in alert_results)
             except Exception as e:
                 logger.warning(f"Failed to send alerts: {e}")
@@ -1491,7 +1493,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
             detail=f"An error occurred during anomaly detection: {str(e)}"
         )
     finally:
-        session.close()
+        await run_in_threadpool(session.close)
 
 
 @app.get(
