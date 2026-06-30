@@ -54,38 +54,38 @@ class StatisticalAnomalyDetector:
         """
         middle_band, upper_band, lower_band = self.calculate_bollinger_bands(data)
         
+        # Vectorized calculation of deviations
+        upper_deviations = (data['close'] - upper_band) / upper_band * 100
+        lower_deviations = (data['close'] - lower_band) / lower_band * 100
+
+        # Create boolean mask for anomalies
+        mask = (data['close'] > upper_band) | (data['close'] < lower_band)
+        mask.iloc[:self.window_size] = False
+
+        # Get indices of anomalies
+        anomaly_indices = np.where(mask)[0]
+
         anomalies = []
-        for i in range(len(data)):
-            if i < self.window_size:
-                continue
-                
+        for i in anomaly_indices:
             price = data['close'].iloc[i]
-            date = data['date'].iloc[i]
+            upper_dev = upper_deviations.iloc[i]
+            lower_dev = lower_deviations.iloc[i]
             
-            # Calculate percentage deviation from bands
-            upper_deviation = (price - upper_band.iloc[i]) / upper_band.iloc[i] * 100
-            lower_deviation = (price - lower_band.iloc[i]) / lower_band.iloc[i] * 100
-            
-            # Determine if price is outside bands
-            is_anomaly = price > upper_band.iloc[i] or price < lower_band.iloc[i]
-            
-            if is_anomaly:
-                score = max(abs(upper_deviation), abs(lower_deviation))
-                anomalies.append(AnomalyResult(
-                    date=date,
-                    score=score,
-                    threshold=self.num_std,
-                    is_anomaly=True,
-                    method='bollinger_bands',
-                    details={
-                        'price': price,
-                        'middle_band': middle_band.iloc[i],
-                        'upper_band': upper_band.iloc[i],
-                        'lower_band': lower_band.iloc[i],
-                        'upper_deviation': upper_deviation,
-                        'lower_deviation': lower_deviation
-                    }
-                ))
+            anomalies.append(AnomalyResult(
+                date=str(data['date'].iloc[i]),
+                score=float(max(abs(upper_dev), abs(lower_dev))),
+                threshold=float(self.num_std),
+                is_anomaly=True,
+                method='bollinger_bands',
+                details={
+                    'price': float(price),
+                    'middle_band': float(middle_band.iloc[i]),
+                    'upper_band': float(upper_band.iloc[i]),
+                    'lower_band': float(lower_band.iloc[i]),
+                    'upper_deviation': float(upper_dev),
+                    'lower_deviation': float(lower_dev)
+                }
+            ))
                 
         return anomalies
 
@@ -114,33 +114,33 @@ class StatisticalAnomalyDetector:
         Returns:
             List[AnomalyResult]: List of detected anomalies
         """
-        z_scores = self.calculate_zscore(data)
+        rolling_mean = data['close'].rolling(window=self.window_size).mean()
+        rolling_std = data['close'].rolling(window=self.window_size).std()
+        z_scores = (data['close'] - rolling_mean) / rolling_std
+
+        # Create boolean mask for anomalies
+        mask = (z_scores.abs() > self.num_std)
+        mask.iloc[:self.window_size] = False
+
+        # Get indices of anomalies
+        anomaly_indices = np.where(mask)[0]
         
         anomalies = []
-        for i in range(len(data)):
-            if i < self.window_size:
-                continue
-                
+        for i in anomaly_indices:
             z_score = z_scores.iloc[i]
-            date = data['date'].iloc[i]
-            
-            # Check if absolute Z-score exceeds threshold
-            is_anomaly = abs(z_score) > self.num_std
-            
-            if is_anomaly:
-                anomalies.append(AnomalyResult(
-                    date=date,
-                    score=abs(z_score),
-                    threshold=self.num_std,
-                    is_anomaly=True,
-                    method='zscore',
-                    details={
-                        'price': data['close'].iloc[i],
-                        'z_score': z_score,
-                        'rolling_mean': data['close'].rolling(window=self.window_size).mean().iloc[i],
-                        'rolling_std': data['close'].rolling(window=self.window_size).std().iloc[i]
-                    }
-                ))
+            anomalies.append(AnomalyResult(
+                date=str(data['date'].iloc[i]),
+                score=float(abs(z_score)),
+                threshold=float(self.num_std),
+                is_anomaly=True,
+                method='zscore',
+                details={
+                    'price': float(data['close'].iloc[i]),
+                    'z_score': float(z_score),
+                    'rolling_mean': float(rolling_mean.iloc[i]),
+                    'rolling_std': float(rolling_std.iloc[i])
+                }
+            ))
                 
         return anomalies
 
@@ -158,30 +158,29 @@ class StatisticalAnomalyDetector:
         volume_std = data['volume'].rolling(window=self.window_size).std()
         volume_z_scores = (data['volume'] - volume_mean) / volume_std
         
+        # Create boolean mask for anomalies
+        # We skip the first window_size elements to avoid incomplete windows
+        mask = (volume_z_scores.abs() > self.num_std)
+        mask.iloc[:self.window_size] = False
+
+        # Get indices of anomalies
+        anomaly_indices = np.where(mask)[0]
+
         anomalies = []
-        for i in range(len(data)):
-            if i < self.window_size:
-                continue
-                
+        for i in anomaly_indices:
             z_score = volume_z_scores.iloc[i]
-            date = data['date'].iloc[i]
-            
-            # Check if absolute Z-score exceeds threshold
-            is_anomaly = abs(z_score) > self.num_std
-            
-            if is_anomaly:
-                anomalies.append(AnomalyResult(
-                    date=date,
-                    score=abs(z_score),
-                    threshold=self.num_std,
-                    is_anomaly=True,
-                    method='volume_zscore',
-                    details={
-                        'volume': data['volume'].iloc[i],
-                        'z_score': z_score,
-                        'rolling_mean': volume_mean.iloc[i],
-                        'rolling_std': volume_std.iloc[i]
-                    }
-                ))
+            anomalies.append(AnomalyResult(
+                date=str(data['date'].iloc[i]),
+                score=float(abs(z_score)),
+                threshold=float(self.num_std),
+                is_anomaly=True,
+                method='volume_zscore',
+                details={
+                    'volume': float(data['volume'].iloc[i]),
+                    'z_score': float(z_score),
+                    'rolling_mean': float(volume_mean.iloc[i]),
+                    'rolling_std': float(volume_std.iloc[i])
+                }
+            ))
                 
         return anomalies 
