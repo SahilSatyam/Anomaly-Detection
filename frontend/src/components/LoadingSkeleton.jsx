@@ -163,7 +163,7 @@ export const DashboardSkeleton = () => (
     <Paper sx={{ p: 2, mb: 3, bgcolor: 'background.paper' }}>
       <Grid container spacing={2}>
         {[1, 2, 3, 4].map((i) => (
-          <Grid item xs={12} sm={3} key={i}>
+          <Grid size={{ xs: 12, sm: 3 }} key={i}>
             <Skeleton 
               variant="rectangular" 
               height={56}
@@ -185,7 +185,7 @@ export const DashboardSkeleton = () => (
     {/* Stats */}
     <Grid container spacing={2} sx={{ mb: 3 }}>
       {[1, 2, 3, 4].map((i) => (
-        <Grid item xs={12} sm={3} key={i}>
+        <Grid size={{ xs: 12, sm: 3 }} key={i}>
           <StatCardSkeleton />
         </Grid>
       ))}

@@ -2,7 +2,7 @@
  * Export Data Utilities Tests
  */
 
-import { convertToCSV, exportStockDataCSV, exportAnomaliesCSV } from '../exportData';
+import { convertToCSV, exportStockDataCSV, exportAnomaliesCSV } from './exportData';
 
 describe('convertToCSV', () => {
   test('converts array of objects to CSV', () => {
