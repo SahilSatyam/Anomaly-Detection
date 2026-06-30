@@ -441,7 +441,7 @@ app.add_middleware(
 # ============== Exception Handlers ==============
 
 @app.exception_handler(StockNotFoundError)
-async def stock_not_found_handler(request, exc: StockNotFoundError):
+def stock_not_found_handler(request, exc: StockNotFoundError):
     logger.warning(f"Stock not found: {exc}")
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -454,7 +454,7 @@ async def stock_not_found_handler(request, exc: StockNotFoundError):
 
 
 @app.exception_handler(AnomalyNotFoundError)
-async def anomaly_not_found_handler(request, exc: AnomalyNotFoundError):
+def anomaly_not_found_handler(request, exc: AnomalyNotFoundError):
     logger.warning(f"Anomaly not found: {exc}")
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -467,7 +467,7 @@ async def anomaly_not_found_handler(request, exc: AnomalyNotFoundError):
 
 
 @app.exception_handler(InvalidDateFormatError)
-async def invalid_date_handler(request, exc: InvalidDateFormatError):
+def invalid_date_handler(request, exc: InvalidDateFormatError):
     logger.warning(f"Invalid date format: {exc}")
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -480,7 +480,7 @@ async def invalid_date_handler(request, exc: InvalidDateFormatError):
 
 
 @app.exception_handler(DatabaseConnectionError)
-async def database_error_handler(request, exc: DatabaseConnectionError):
+def database_error_handler(request, exc: DatabaseConnectionError):
     logger.error(f"Database connection error: {exc}")
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -591,7 +591,7 @@ except Exception as e:
     summary="Health check",
     description="Returns the health status of the API and its dependencies"
 )
-async def health_check():
+def health_check():
     """
     Perform a comprehensive health check of the API.
     
@@ -617,7 +617,7 @@ async def health_check():
     summary="Readiness check",
     description="Returns whether the API is ready to accept requests"
 )
-async def readiness_check():
+def readiness_check():
     """
     Check if the API is ready to handle requests.
     
@@ -643,7 +643,7 @@ async def readiness_check():
     summary="List all stocks",
     description="Retrieve a list of all available stocks in the database"
 )
-async def get_stocks():
+def get_stocks():
     """
     Get list of all available stocks.
     
@@ -690,7 +690,7 @@ async def get_stocks():
     summary="Get stock price data",
     description="Retrieve historical stock price data with optional date filtering and pagination"
 )
-async def get_stock_data(
+def get_stock_data(
     symbol: str = Query(
         ..., 
         description="Stock symbol (e.g., AAPL)",
@@ -819,7 +819,7 @@ async def get_stock_data(
     summary="List anomalies",
     description="Retrieve detected anomalies with filtering and pagination"
 )
-async def get_anomalies(
+def get_anomalies(
     symbol: str = Query(
         ..., 
         description="Stock symbol (e.g., AAPL)",
@@ -948,7 +948,7 @@ async def get_anomalies(
     summary="Get anomaly by ID",
     description="Retrieve a single anomaly by its ID"
 )
-async def get_anomaly_by_id(
+def get_anomaly_by_id(
     anomaly_id: int = Path(..., description="Anomaly ID", ge=1)
 ):
     """
@@ -973,7 +973,7 @@ async def get_anomaly_by_id(
     summary="Create anomaly",
     description="Create a new anomaly record"
 )
-async def create_anomaly(
+def create_anomaly(
     anomaly: AnomalyCreateRequest = Body(..., description="Anomaly data")
 ):
     """
@@ -1038,7 +1038,7 @@ async def create_anomaly(
     summary="Update anomaly",
     description="Update an existing anomaly record"
 )
-async def update_anomaly(
+def update_anomaly(
     anomaly_id: int = Path(..., description="Anomaly ID", ge=1),
     updates: AnomalyUpdateRequest = Body(..., description="Fields to update")
 ):
@@ -1097,7 +1097,7 @@ async def update_anomaly(
     summary="Delete anomaly",
     description="Delete an anomaly record"
 )
-async def delete_anomaly(
+def delete_anomaly(
     anomaly_id: int = Path(..., description="Anomaly ID", ge=1)
 ):
     """
@@ -1135,7 +1135,7 @@ async def delete_anomaly(
     summary="Get settings",
     description="Retrieve current application settings"
 )
-async def get_settings():
+def get_settings():
     """
     Get current application settings.
     
@@ -1169,7 +1169,7 @@ async def get_settings():
     summary="Update settings",
     description="Update application settings"
 )
-async def update_settings(settings: SettingsRequest):
+def update_settings(settings: SettingsRequest):
     """
     Update application settings.
     
@@ -1212,7 +1212,7 @@ async def update_settings(settings: SettingsRequest):
     summary="Trigger anomaly detection",
     description="Manually trigger anomaly detection for a stock symbol"
 )
-async def detect_anomalies(request: DetectionRequest = Body(...)):
+def detect_anomalies(request: DetectionRequest = Body(...)):
     """
     Trigger anomaly detection for a specific stock.
     
@@ -1500,7 +1500,7 @@ async def detect_anomalies(request: DetectionRequest = Body(...)):
     summary="Detection system status",
     description="Get the status of the anomaly detection system"
 )
-async def get_detection_status():
+def get_detection_status():
     """
     Get the current status of the detection system.
     
@@ -1533,7 +1533,7 @@ async def get_detection_status():
     summary="List cached models",
     description="Get list of cached ML models"
 )
-async def list_models():
+def list_models():
     """
     List all cached ML models.
     
@@ -1566,7 +1566,7 @@ async def list_models():
     summary="Delete cached model",
     description="Delete a cached model to force retraining"
 )
-async def delete_model(
+def delete_model(
     model_type: str = Path(..., description="Model type (e.g., 'isolation_forest', 'lstm')"),
     symbol: str = Path(..., description="Stock symbol")
 ):
@@ -1599,7 +1599,7 @@ async def delete_model(
     summary="Cleanup expired models",
     description="Delete all expired cached models"
 )
-async def cleanup_models(max_age_hours: int = Query(24, ge=1, le=720)):
+def cleanup_models(max_age_hours: int = Query(24, ge=1, le=720)):
     """
     Cleanup expired models.
     
@@ -1634,7 +1634,7 @@ async def cleanup_models(max_age_hours: int = Query(24, ge=1, le=720)):
     summary="Alert system status",
     description="Get the status of the alert system"
 )
-async def get_alert_status():
+def get_alert_status():
     """
     Get the current status of the alert system.
     
@@ -1660,7 +1660,7 @@ async def get_alert_status():
     summary="Alert history",
     description="Get recent alert history"
 )
-async def get_alert_history(
+def get_alert_history(
     limit: int = Query(100, ge=1, le=1000),
     channel: Optional[str] = Query(None, description="Filter by channel")
 ):
@@ -1680,7 +1680,7 @@ async def get_alert_history(
 
 
 @app.on_event("startup")
-async def startup_event():
+def startup_event():
     """Application startup tasks"""
     logger.info("Stock Anomaly Detection API v2.0.0 starting up")
     if db is None:
@@ -1690,6 +1690,6 @@ async def startup_event():
 
 
 @app.on_event("shutdown")
-async def shutdown_event():
+def shutdown_event():
     """Application shutdown tasks"""
     logger.info("Stock Anomaly Detection API shutting down")
